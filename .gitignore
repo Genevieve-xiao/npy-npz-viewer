@@ -1,0 +1,23 @@
+# Python caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# OS/editor noise
+.DS_Store
+._*
+Thumbs.db
+
+# Runtime outputs
+*.png
+*.csv
+local_data/
+test_data/generated/
+
+# Generated NumPy data. Keep only tiny smoke fixtures in git.
+test_data/*.npy
+test_data/*.npz
+!test_data/test_1d.npy
+!test_data/test_2d.npy
+!test_data/test_data.npz

@@ -1,0 +1,4 @@
+# Large generated NumPy data should not be committed to the normal git history.
+# If these files must be published later, use Git LFS or GitHub Release assets.
+*.npy binary
+*.npz binary

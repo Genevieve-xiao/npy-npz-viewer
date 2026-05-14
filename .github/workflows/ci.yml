@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile source
+        run: |
+          python -m py_compile main_v2.2.py core/*.py ui/*.py utils/*.py test_data/*.py
+
+      - name: Verify core functions
+        run: |
+          python test_data/verify_functions.py
+
+      - name: Generate and verify UX data
+        run: |
+          python test_data/create_uxcase_test_data.py
+          python test_data/verify_uxcase_data.py
