@@ -1,29 +1,40 @@
 # NPY/NPZ Viewer
 
-A PySide6 desktop viewer for NumPy `.npy` and `.npz` files, focused on large
-seismic/volume data as well as 1D signals, 2D tables, images, multichannel data,
-and 4D attribute volumes.
+A PySide6 desktop viewer for NumPy `.npy` / `.npz` files and local `.zarr`
+stores. It is focused on large multidimensional scientific arrays such as
+seismic volumes, 1D signals, 2D tables, images, multichannel data, and 4D
+attribute volumes.
 
 ## Quick Start
 
 ```bash
 conda create -n npy-viewer python=3.11 -y
 conda activate npy-viewer
-pip install -r requirements.txt
-python main_v2.2.py
+pip install -e ".[dev]"
+python main.py
 ```
 
-You can open files with the button in the left panel or drag a `.npy` / `.npz`
-file directly into the window.
+After installation you can also launch with:
+
+```bash
+npy-npz-viewer
+```
+
+Open `.npy` / `.npz` files from the left panel, drag them into the window, or
+use the Zarr directory button for local `.zarr` stores.
 
 ## Main Features
 
-- Read `.npy` with read-only memory mapping for faster large-file startup.
-- Browse `.npz` keys without changing the main workflow.
+- Standard `src/npy_npz_viewer` package layout with a console entry point.
+- Read `.npy` files through read-only memory mapping.
+- Browse `.npz` keys and `.zarr` group arrays from the same key-selection UI.
+- Use Dask-backed lazy arrays for large `.npy` files and all `.zarr` arrays.
+- Compute previews, sampled statistics, projections, and plot inputs through
+  bounded compute helpers so the UI avoids accidental full-array materialization.
 - Apply non-destructive dimension filters before slicing, previewing, plotting,
   statistics, and CSV export.
 - Slice arbitrary axes with Python-style slice syntax.
-- Preview high-dimensional data as flattened values, 2D middle slices, or axis
+- Preview high-dimensional data as flattened values, bounded 2D slices, or axis
   summaries.
 - Plot semantic data types:
   - 1D sequence: line chart, histogram
@@ -34,74 +45,68 @@ file directly into the window.
   - 3D multichannel: channel heatmap/image
   - 4D volume: channel selection plus slice/projection
 - Run file loading, statistics, and preview refresh in background Qt tasks.
-- Use one-click 2D view for large/high-dimensional arrays.
+- Generate benchmark CSV/Markdown output for performance-report material.
 
 ## Project Layout
 
 ```text
 npy-npz-Viewer/
-├── main_v2.2.py              # Recommended application entrypoint
-├── core/                     # Loading, filtering, slicing, stats, semantics, plotting
-├── ui/                       # PySide6 widgets and panels for the v2.2 UI
-├── utils/                    # Preview and large-data helpers
-├── test_data/                # Tiny fixtures plus deterministic data generators
-├── docs/                     # Testing and performance guides
-├── legacy/                   # Archived v1/v2.1 code kept for reference only
-├── requirements.txt
-└── README.md
+|-- main.py                       # Application launcher
+|-- pyproject.toml                # Package metadata and console script
+|-- src/npy_npz_viewer/
+|   |-- app.py                    # Main PySide6 application
+|   |-- config.py                 # Central runtime thresholds
+|   |-- logging_config.py         # Logging setup
+|   |-- core/                     # Loading, handles, compute, slicing, stats, plotting
+|   |-- ui/                       # PySide6 widgets and panels
+|   `-- utils/                    # Preview and large-data helpers
+|-- tests/                        # Pytest coverage for Dask/Zarr engine
+|-- scripts/benchmark_large_arrays.py
+|-- test_data/                    # Tiny fixtures plus deterministic generators
+|-- docs/
+`-- legacy/                       # Archived reference code
 ```
 
-Only `main_v2.2.py` is recommended for current use. Files under `legacy/` are
-not part of the maintained runtime path.
-
-## Test Data Policy
-
-Large binary `.npy/.npz` data is intentionally not tracked in git. The repository
-keeps only tiny smoke fixtures and deterministic generators.
-
-Generate semantic UX data locally:
-
-```bash
-python test_data/create_uxcase_test_data.py
-python test_data/verify_uxcase_data.py
-```
-
-This creates `uxcase_*.npy`, `uxcase_mixed_suite.npz`, and
-`uxcase_manifest.json` in `test_data/`. These generated files are ignored by
-git. Put very large local samples such as F3 seismic cubes under `local_data/`
-or attach them as GitHub Release assets instead of committing them.
-
-See [test_data/README.md](test_data/README.md) for the exact fixture policy and
-[docs/TESTING_GUIDE.md](docs/TESTING_GUIDE.md) for a GUI test checklist.
+`main.py` is the single local launcher. New code should import from
+`npy_npz_viewer`.
 
 ## Large Data Notes
 
-- Prefer `.npy` over `.npz` for very large arrays because `.npy` can be memory
-  mapped.
+- `.npy` remains best for large local arrays because it supports memory mapping.
+- `.zarr` is supported for chunked multidimensional stores and is loaded lazily
+  through Dask.
 - Start with dimension filtering, singleton-axis removal, slicing, or one-click
   2D view before expensive plots.
-- Projections and 3D plots use downsampling/quality controls to keep the UI
+- Statistics use bounded sampling for large arrays.
+- Projections and 3D plots use quality controls and downsampling to keep the UI
   responsive.
 - CSV export is intended for current 1D/2D views, not raw high-dimensional
   volumes.
 
-See [docs/PERFORMANCE_GUIDE.md](docs/PERFORMANCE_GUIDE.md) for more detail.
-
 ## Verification
 
 ```bash
-python -m py_compile main_v2.2.py core/*.py ui/*.py utils/*.py test_data/*.py
+python -m compileall -q main.py src test_data tests scripts
+pytest
 python test_data/verify_functions.py
 python test_data/create_uxcase_test_data.py
 python test_data/verify_uxcase_data.py
 ```
 
-## GitHub Publishing Checklist
+Run a small benchmark smoke test:
 
-- Do not commit generated `uxcase_*.npy`, generated `.npz`, or local F3 data.
-- Keep large local samples in `local_data/` or publish them as Release assets.
-- Confirm `.DS_Store`, `._*`, `__pycache__/`, and `*.pyc` are absent.
-- Use `python main_v2.2.py` as the public launch command.
+```bash
+python scripts/benchmark_large_arrays.py --shape 96x128x80
+```
+
+Benchmark output is written under `benchmark_results/`, which is ignored by git.
+
+## Test Data Policy
+
+Large binary `.npy/.npz/.zarr` data is intentionally not tracked in git. The
+repository keeps only tiny smoke fixtures and deterministic generators. Put very
+large local samples under `local_data/` or attach them as GitHub Release assets
+instead of committing them.
 
 ## License
 

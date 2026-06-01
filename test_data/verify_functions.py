@@ -8,17 +8,18 @@ import numpy as np
 
 
 ROOT = Path(__file__).resolve().parents[1]
+SRC = ROOT / "src"
 DATA_DIR = Path(__file__).resolve().parent
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
 
-from core.array_session import ArraySession
-from core.dimension_filter import apply_dimension_filter
-from core.loaders import ArrayLoader
-from core.slicing import ArraySlicer
-from core.stats import ArrayStats
-from core.task_result import TaskResult
-from utils.helpers import PreviewHelper
+from npy_npz_viewer.core.array_session import ArraySession
+from npy_npz_viewer.core.dimension_filter import apply_dimension_filter
+from npy_npz_viewer.core.loaders import ArrayLoader
+from npy_npz_viewer.core.slicing import ArraySlicer
+from npy_npz_viewer.core.stats import ArrayStats
+from npy_npz_viewer.core.task_result import TaskResult
+from npy_npz_viewer.utils.helpers import PreviewHelper
 
 
 def check(condition, message):

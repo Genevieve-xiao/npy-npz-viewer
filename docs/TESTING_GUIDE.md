@@ -8,7 +8,8 @@ or large-data behavior.
 Run from the repository root:
 
 ```powershell
-python -m py_compile main_v2.2.py core/*.py ui/*.py utils/*.py test_data/*.py
+python -m compileall -q main.py src test_data tests scripts
+pytest
 python test_data/verify_functions.py
 python test_data/create_uxcase_test_data.py
 python test_data/verify_uxcase_data.py
@@ -43,7 +44,10 @@ These are only for fast loader and core-function checks. Use the generated
 
 ## Feature Checklist
 
-- Drag-and-drop `.npy` and `.npz` files.
+- Drag-and-drop `.npy`, `.npz`, and `.zarr` sources.
+- Zarr directory open: root arrays and grouped arrays appear in the key list.
+- Dask-backed large arrays: preview/statistics/projection complete without
+  materializing the full source array.
 - Dimension filter: keep/drop `:`, comma indexes, slices, negative indexes, and
   singleton-axis removal.
 - Universal slice: apply, reset, and combine with previous dimension filtering.

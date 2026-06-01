@@ -166,7 +166,7 @@ def create_manifest(entries, npz_entry):
     manifest = {
         "suite": "uxcase",
         "version": 1,
-        "description": "Deterministic semantic UX test data for NPY/NPZ Viewer v2.2.",
+        "description": "Deterministic semantic UX test data for NPY/NPZ Viewer.",
         "naming_rule": "uxcase_<semantic>_<shape>.npy or uxcase_mixed_suite.npz",
         "randomness": "No np.random calls; all arrays are generated from deterministic analytic functions.",
         "files": entries + [npz_entry],
