@@ -21,6 +21,8 @@ class SemanticControlWidget(QWidget):
         super().__init__(parent)
         self.current_shape = None
         self.current_semantic = None
+        self.inferred_semantic = None
+        self.inferred_info = {}
         self.volume_shape = None
         self.quick_2d_btn = None
         self.init_ui()
@@ -71,35 +73,61 @@ class SemanticControlWidget(QWidget):
     def set_array_info(self, shape: tuple, semantic_info: dict):
         """设置数组信息和语义推断结果"""
         self.current_shape = shape
+        self.inferred_info = semantic_info or {}
+        self.inferred_semantic = self.inferred_info.get('semantic', DataSemantics.UNKNOWN)
 
-        # 显示推断信息
-        reason = semantic_info.get('reason', '')
-        confidence = semantic_info.get('confidence', '')
-        self.semantic_info_label.setText(f"推断: {reason} (置信度: {confidence})")
-
-        # 设置默认语义
-        semantic = semantic_info.get('semantic')
-        if semantic:
-            self.current_semantic = semantic
-            self.semantic_combo.setCurrentText(semantic.value)
+        # 新数组/新视图默认回到自动判断，但实际生效语义使用推断结果。
+        self.semantic_combo.blockSignals(True)
+        self.semantic_combo.setCurrentText("自动判断")
+        self.semantic_combo.blockSignals(False)
+        self.apply_auto_semantic(emit=False)
 
     def on_semantic_changed(self, semantic_text: str):
         """语义类型改变"""
         if semantic_text == "自动判断":
+            self.apply_auto_semantic(emit=True)
             return
 
         semantic = DataSemantics.from_string(semantic_text)
+        self.apply_semantic(semantic)
+        self.update_semantic_info_label(auto_mode=False, selected_semantic=semantic)
+        self.semantic_changed.emit(semantic_text)
+
+    def apply_auto_semantic(self, emit: bool = False):
+        """让自动判断结果成为当前生效语义。"""
+        semantic = self.inferred_semantic or DataSemantics.UNKNOWN
+        self.apply_semantic(semantic)
+        self.update_semantic_info_label(auto_mode=True, selected_semantic=semantic)
+        if emit:
+            self.semantic_changed.emit("自动判断")
+
+    def apply_semantic(self, semantic: DataSemantics):
+        """应用当前生效语义并刷新图表选项和参数区。"""
         self.current_semantic = semantic
 
-        # 更新图表类型选项
         plot_options = get_plot_options(semantic)
         self.plot_type_combo.clear()
         self.plot_type_combo.addItems(plot_options)
 
-        # 更新参数区域
         self.update_params_ui(semantic)
 
-        self.semantic_changed.emit(semantic_text)
+    def update_semantic_info_label(self, auto_mode: bool, selected_semantic: DataSemantics):
+        """显示自动判断结果和当前生效解释方式。"""
+        reason = self.inferred_info.get('reason', '')
+        confidence = self.inferred_info.get('confidence', '')
+        inferred = self.inferred_semantic or DataSemantics.UNKNOWN
+        suggestions = self.inferred_info.get('suggestions') or []
+
+        lines = [
+            f"自动判断结果: {inferred.value}",
+            f"原因: {reason}" if reason else "原因: 暂无",
+            f"置信度: {confidence}" if confidence else "置信度: 暂无",
+        ]
+        if suggestions:
+            lines.append("其他可能: " + ", ".join(s.value for s in suggestions))
+        if not auto_mode:
+            lines.insert(0, f"当前手动选择: {selected_semantic.value}")
+        self.semantic_info_label.setText("\n".join(lines))
 
     def update_params_ui(self, semantic: DataSemantics):
         """根据语义类型更新参数 UI"""
@@ -402,6 +430,13 @@ class SemanticControlWidget(QWidget):
         """获取表格数据参数"""
         params = {}
 
+        if plot_type in ["多折线图", "相关性热力图"]:
+            selected_items = self.y_cols_list.selectedItems()
+            if selected_items:
+                params['y_cols'] = [int(item.text().split()[1]) for item in selected_items]
+            else:
+                params['y_cols'] = None
+
         if plot_type == "多折线图":
             # X 轴列
             x_col_text = self.x_col_combo.currentText()
@@ -409,13 +444,6 @@ class SemanticControlWidget(QWidget):
                 params['x_col'] = None
             else:
                 params['x_col'] = int(x_col_text.split()[1])
-
-            # Y 轴列
-            selected_items = self.y_cols_list.selectedItems()
-            if selected_items:
-                params['y_cols'] = [int(item.text().split()[1]) for item in selected_items]
-            else:
-                params['y_cols'] = None
 
             params['invert_y'] = self.invert_y_check.isChecked()
 

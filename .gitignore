@@ -9,6 +9,7 @@ __pycache__/
 .DS_Store
 ._*
 Thumbs.db
+.vscode/
 
 # Runtime outputs
 *.png
@@ -17,13 +18,11 @@ benchmark_results/
 local_data/
 *.zarr/
 test_data/generated/
-test_data/uxcase_manifest.json
 
-# Generated NumPy data. Keep only tiny smoke fixtures in git.
+# Generated NumPy data. Keep only the compact engcase suite in git.
 test_data/*.npy
 test_data/*.npz
-!test_data/test_1d.npy
-!test_data/test_2d.npy
-!test_data/test_data.npz
+!test_data/engcase_*.npy
+!test_data/engcase_mixed_suite.npz
 
 docs/EXPERIMENT_REPORT_DRAFT.md

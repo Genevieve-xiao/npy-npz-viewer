@@ -3,6 +3,7 @@ Lightweight verification for core non-GUI functionality.
 """
 from pathlib import Path
 import sys
+import tempfile
 
 import numpy as np
 
@@ -31,11 +32,19 @@ def check(condition, message):
 def main():
     loader = ArrayLoader()
 
-    result = loader.load_file(str(DATA_DIR / "test_1d.npy"))
-    check(result["success"], "NPY smoke fixture loads")
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp_path = Path(tmpdir)
+        npy_path = tmp_path / "smoke_1d.npy"
+        npz_path = tmp_path / "smoke_suite.npz"
+        np.save(npy_path, np.arange(12, dtype=np.float32))
+        np.savez(npz_path, first=np.arange(6), second=np.arange(12).reshape(3, 4))
 
-    result = loader.load_file(str(DATA_DIR / "test_data.npz"))
-    check(result["success"] and len(result["keys"]) >= 1, "NPZ smoke fixture loads")
+        result = loader.load_file(str(npy_path))
+        check(result["success"], "NPY smoke fixture loads")
+
+        result = loader.load_file(str(npz_path))
+        check(result["success"] and len(result["keys"]) >= 1, "NPZ smoke fixture loads")
+        loader.close()
 
     array = np.arange(5000, dtype=np.float32).reshape(100, 50)
     stats = ArrayStats.compute_stats(array)

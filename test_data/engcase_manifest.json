@@ -1,0 +1,181 @@
+{
+  "suite": "engcase",
+  "version": 1,
+  "description": "Deterministic engineering application data for NPY/NPZ Viewer demos.",
+  "naming_rule": "engcase_<scenario>_<shape>.npy or engcase_mixed_suite.npz",
+  "randomness": "No np.random calls; arrays are generated from analytic functions.",
+  "files": [
+    {
+      "file": "engcase_bearing_vibration_4096.npy",
+      "kind": "npy",
+      "shape": [
+        4096
+      ],
+      "dtype": "float32",
+      "elements": 4096,
+      "semantic": "1D sequence: bearing vibration diagnosis",
+      "recommended_plots": [
+        "line chart",
+        "histogram",
+        "sampled statistics"
+      ],
+      "recommended_operations": [
+        "Use line chart first; histogram should show a long positive tail."
+      ],
+      "expected_visible_features": [
+        "shaft harmonics",
+        "periodic impact pulses",
+        "high-frequency resonance decay"
+      ],
+      "size_bytes": 16512
+    },
+    {
+      "file": "engcase_bridge_sensor_table_2400x6.npy",
+      "kind": "npy",
+      "shape": [
+        2400,
+        6
+      ],
+      "dtype": "float32",
+      "elements": 14400,
+      "semantic": "2D table: bridge structural health monitoring",
+      "recommended_plots": [
+        "multi-line chart",
+        "single-column histogram",
+        "scatter plot",
+        "correlation heatmap"
+      ],
+      "recommended_operations": [
+        "Use column 0 as time in minutes; compare load, strain, displacement, and stress."
+      ],
+      "expected_visible_features": [
+        "daily traffic peaks",
+        "truck crossing pulses",
+        "load-strain-deflection correlation"
+      ],
+      "size_bytes": 57728
+    },
+    {
+      "file": "engcase_fem_stress_plate_512x512.npy",
+      "kind": "npy",
+      "shape": [
+        512,
+        512
+      ],
+      "dtype": "float32",
+      "elements": 262144,
+      "semantic": "2D image/matrix: finite element stress cloud",
+      "recommended_plots": [
+        "heatmap",
+        "image display"
+      ],
+      "recommended_operations": [
+        "Use heatmap with viridis, plasma, or inferno colormap."
+      ],
+      "expected_visible_features": [
+        "central hole",
+        "stress concentration ring",
+        "crack-tip hotspot",
+        "support hotspots"
+      ],
+      "size_bytes": 1048704
+    },
+    {
+      "file": "engcase_industrial_ct_volume_96x128x96.npy",
+      "kind": "npy",
+      "shape": [
+        96,
+        128,
+        96
+      ],
+      "dtype": "float32",
+      "elements": 1179648,
+      "semantic": "3D volume: industrial CT defect inspection",
+      "recommended_plots": [
+        "slice heatmap",
+        "projection",
+        "3D scatter",
+        "3D voxel",
+        "slice stack"
+      ],
+      "recommended_operations": [
+        "Slice near the middle axes; use max projection to expose inclusions."
+      ],
+      "expected_visible_features": [
+        "ellipsoid casting body",
+        "low-density pores",
+        "thin crack sheet",
+        "bright inclusions"
+      ],
+      "size_bytes": 4718720
+    },
+    {
+      "file": "engcase_cfd_wake_24x64x48x4.npy",
+      "kind": "npy",
+      "shape": [
+        24,
+        64,
+        48,
+        4
+      ],
+      "dtype": "float32",
+      "elements": 294912,
+      "semantic": "4D transient field: CFD wake channels",
+      "recommended_plots": [
+        "slice heatmap",
+        "projection",
+        "channel comparison"
+      ],
+      "recommended_operations": [
+        "Treat axis 3 as channel axis; inspect channels 0-3 separately."
+      ],
+      "expected_visible_features": [
+        "velocity deficit",
+        "pressure recovery",
+        "vorticity shear layer",
+        "thermal plume"
+      ],
+      "size_bytes": 1179776
+    },
+    {
+      "file": "engcase_mixed_suite.npz",
+      "kind": "npz",
+      "dtype": "mixed float32 arrays",
+      "semantic": "Mixed engineering suite for NPZ key switching",
+      "recommended_plots": [
+        "all supported plot groups by key"
+      ],
+      "recommended_operations": [
+        "Switch every key and confirm semantic controls refresh."
+      ],
+      "expected_visible_features": [
+        "key-specific engineering scenario, shape, and dimensionality changes"
+      ],
+      "keys": {
+        "bearing_vibration": [
+          4096
+        ],
+        "bridge_sensor_table": [
+          600,
+          6
+        ],
+        "fem_stress_plate": [
+          128,
+          128
+        ],
+        "industrial_ct_volume": [
+          48,
+          64,
+          48
+        ],
+        "cfd_wake": [
+          8,
+          32,
+          24,
+          4
+        ]
+      },
+      "size_bytes": 320249
+    }
+  ]
+}

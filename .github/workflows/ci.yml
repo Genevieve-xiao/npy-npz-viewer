@@ -39,7 +39,7 @@ jobs:
         run: |
           python test_data/verify_functions.py
 
-      - name: Generate and verify UX data
+      - name: Generate and verify engineering data
         run: |
-          python test_data/create_uxcase_test_data.py
-          python test_data/verify_uxcase_data.py
+          python test_data/create_engineering_test_data.py
+          python test_data/verify_engineering_test_data.py

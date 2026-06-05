@@ -16,7 +16,8 @@ special attention to seismic and other large volume data.
 
 Large sample data should not be committed to git. Keep local-only data under
 `local_data/` or publish it as a GitHub Release asset. The repository's
-`test_data/` folder contains tiny smoke fixtures and deterministic generators.
+`test_data/` contains the tracked `engcase_` engineering suite and deterministic
+generators.
 
 ## Data Format Notes
 

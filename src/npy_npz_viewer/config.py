@@ -18,6 +18,9 @@ class ViewerConfig:
     plot_max_points_2d: int = 100_000
     plot_max_rows_heatmap: int = 2000
     plot_max_cols_heatmap: int = 2000
+    voxel_max_axis_samples: int = 32
+    voxel_max_voxels: int = 1800
+    voxel_percentile_threshold: float = 85.0
 
 
 DEFAULT_CONFIG = ViewerConfig()

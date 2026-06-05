@@ -587,6 +587,11 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "绘图失败", result['error'])
                 return
 
+            info = result.get('info')
+            if info:
+                self.downsample_info.setText(info)
+                self.downsample_info.show()
+
             self.canvas.draw()
 
         except Exception as e:
@@ -663,12 +668,22 @@ class MainWindow(QMainWindow):
             )
 
         elif plot_type == "相关性热力图":
+            y_cols = params.get('y_cols')
+            column_labels = self.get_column_labels(array.shape[1])
+
+            if y_cols:
+                valid_cols = [col for col in y_cols if 0 <= col < array.shape[1]]
+                if not valid_cols:
+                    return {'success': False, 'error': '没有有效的相关性列'}
+                array = array[:, valid_cols]
+                column_labels = [self.format_column_label(col) for col in valid_cols]
+
             plot_array, _, info = ArrayComputeService.downsample_2d_for_plot(array)
             if info:
                 self.downsample_info.setText(info)
                 self.downsample_info.show()
             return SemanticVisualizer.plot_tabular_correlation(
-                plot_array, self.figure, column_labels=self.get_column_labels(array.shape[1])
+                plot_array, self.figure, column_labels=column_labels
             )
 
         else:
@@ -893,7 +908,7 @@ def main():
     app.setOrganizationName("DataViewer")
 
     window = MainWindow()
-    window.show()
+    window.showMaximized()
 
     sys.exit(app.exec())
 

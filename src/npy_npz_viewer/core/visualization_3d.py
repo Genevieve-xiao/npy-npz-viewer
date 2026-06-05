@@ -8,6 +8,7 @@ from matplotlib.figure import Figure
 from mpl_toolkits.mplot3d import Axes3D
 from typing import Dict, Optional
 from npy_npz_viewer.core.array_compute import ArrayComputeService
+from npy_npz_viewer.config import DEFAULT_CONFIG, ViewerConfig
 
 
 class Visualizer3D:
@@ -252,7 +253,10 @@ class Visualizer3D:
 
     @staticmethod
     def plot_3d_voxel(array: np.ndarray, figure: Figure,
-                     threshold: float = None, max_voxels: int = 10000) -> Dict:
+                     threshold: float = None, max_voxels: Optional[int] = None,
+                     max_axis_samples: Optional[int] = None,
+                     percentile_threshold: Optional[float] = None,
+                     config: ViewerConfig = DEFAULT_CONFIG) -> Dict:
         """
         绘制 3D 体素图
 
@@ -265,51 +269,77 @@ class Visualizer3D:
             return {'success': False, 'error': '需要 3D 数组'}
 
         try:
-            d_step = max(1, int(np.ceil(array.shape[0] / 60)))
-            h_step = max(1, int(np.ceil(array.shape[1] / 60)))
-            w_step = max(1, int(np.ceil(array.shape[2] / 60)))
+            max_voxels = max_voxels or config.voxel_max_voxels
+            max_axis_samples = max_axis_samples or config.voxel_max_axis_samples
+            percentile_threshold = (
+                percentile_threshold
+                if percentile_threshold is not None
+                else config.voxel_percentile_threshold
+            )
+
+            d_step = max(1, int(np.ceil(array.shape[0] / max_axis_samples)))
+            h_step = max(1, int(np.ceil(array.shape[1] / max_axis_samples)))
+            w_step = max(1, int(np.ceil(array.shape[2] / max_axis_samples)))
             sampled = ArrayComputeService.to_numpy(array[::d_step, ::h_step, ::w_step])
 
-            # 自动计算阈值（如果未指定）
+            finite_values = sampled[np.isfinite(sampled)]
+            if finite_values.size == 0:
+                return {'success': False, 'error': '体素图没有有效数值'}
+
             if threshold is None:
-                threshold = np.percentile(sampled, 75)  # 只显示前 25% 的值
+                threshold = float(np.percentile(finite_values, percentile_threshold))
 
-            # 创建布尔掩码
-            mask = sampled > threshold
+            mask = np.isfinite(sampled) & (sampled > threshold)
+            if not np.any(mask):
+                threshold = float(finite_values.max())
+                mask = np.isfinite(sampled) & (sampled >= threshold)
 
-            # 限制体素数量
-            if np.sum(mask) > max_voxels:
-                # 随机采样
-                indices = np.where(mask)
-                sample_indices = np.random.choice(
-                    len(indices[0]), max_voxels, replace=False
-                )
+            original_visible = int(np.count_nonzero(mask))
+            if original_visible > max_voxels:
+                flat_indices = np.flatnonzero(mask)
+                selected = np.linspace(0, flat_indices.size - 1, max_voxels, dtype=np.int64)
+                keep_flat = flat_indices[selected]
                 new_mask = np.zeros_like(mask)
-                new_mask[
-                    indices[0][sample_indices],
-                    indices[1][sample_indices],
-                    indices[2][sample_indices]
-                ] = True
+                new_mask.flat[keep_flat] = True
                 mask = new_mask
+            displayed_voxels = int(np.count_nonzero(mask))
 
             figure.clear()
             ax = figure.add_subplot(111, projection='3d')
 
-            # 绘制体素
-            max_value = np.nanmax(sampled)
-            if max_value == 0 or not np.isfinite(max_value):
-                max_value = 1
-            colors = plt.cm.viridis(sampled / max_value)
-            ax.voxels(mask, facecolors=colors, edgecolor='k', alpha=0.7)
+            min_value = float(finite_values.min())
+            max_value = float(finite_values.max())
+            if max_value == min_value:
+                normalized = np.zeros_like(sampled, dtype=np.float32)
+            else:
+                normalized = (sampled - min_value) / (max_value - min_value)
+            colors = plt.cm.viridis(np.nan_to_num(normalized, nan=0.0))
+            colors[..., 3] = 0.72
+            ax.voxels(mask, facecolors=colors, edgecolor='none')
 
             ax.set_xlabel('X 轴')
             ax.set_ylabel('Y 轴')
             ax.set_zlabel('Z 轴')
-            ax.set_title(f'3D 体素图 (阈值: {threshold:.2f})')
+            ax.set_title(f'3D 体素图 (阈值: {threshold:.2f}, 显示 {displayed_voxels} 个体素)')
+            ax.set_box_aspect(sampled.shape[::-1])
 
             figure.tight_layout()
 
-            return {'success': True}
+            info_parts = []
+            if sampled.shape != tuple(array.shape):
+                info_parts.append(f"体素图已从 {tuple(array.shape)} 降采样到 {sampled.shape}")
+            if original_visible > displayed_voxels:
+                info_parts.append(f"候选体素 {original_visible:,} 个，确定性保留 {displayed_voxels:,} 个")
+            info_parts.append(f"阈值采用第 {percentile_threshold:g} 百分位附近: {threshold:.3g}")
+
+            return {
+                'success': True,
+                'info': "；".join(info_parts),
+                'sampled_shape': tuple(sampled.shape),
+                'candidate_voxels': original_visible,
+                'displayed_voxels': displayed_voxels,
+                'threshold': threshold,
+            }
         except Exception as e:
             return {'success': False, 'error': f'绘图失败: {str(e)}'}
 

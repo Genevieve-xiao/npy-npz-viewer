@@ -112,7 +112,7 @@ class ArrayLoadResult:
         return cls(success=False, error=error)
 
     def to_payload(self) -> Dict[str, Any]:
-        """Return the legacy dict shape used by the current GUI callbacks."""
+        """Return the compatibility dict shape used by the current GUI callbacks."""
 
         handle = self.current_handle
         payload: Dict[str, Any] = {

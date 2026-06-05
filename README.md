@@ -62,9 +62,8 @@ npy-npz-Viewer/
 |   `-- utils/                    # Preview and large-data helpers
 |-- tests/                        # Pytest coverage for Dask/Zarr engine
 |-- scripts/benchmark_large_arrays.py
-|-- test_data/                    # Tiny fixtures plus deterministic generators
-|-- docs/
-`-- legacy/                       # Archived reference code
+|-- test_data/                    # Tracked engcase data and generators
+`-- docs/
 ```
 
 `main.py` is the single local launcher. New code should import from
@@ -89,9 +88,11 @@ npy-npz-Viewer/
 python -m compileall -q main.py src test_data tests scripts
 pytest
 python test_data/verify_functions.py
-python test_data/create_uxcase_test_data.py
-python test_data/verify_uxcase_data.py
+python test_data/create_engineering_test_data.py
+python test_data/verify_engineering_test_data.py
 ```
+
+Manual testing is documented in `docs/TESTING_GUIDE.md`.
 
 Run a small benchmark smoke test:
 
@@ -103,10 +104,30 @@ Benchmark output is written under `benchmark_results/`, which is ignored by git.
 
 ## Test Data Policy
 
-Large binary `.npy/.npz/.zarr` data is intentionally not tracked in git. The
-repository keeps only tiny smoke fixtures and deterministic generators. Put very
-large local samples under `local_data/` or attach them as GitHub Release assets
-instead of committing them.
+The repository tracks the compact `engcase_` engineering test suite:
+
+| File | Scenario | First useful view |
+| --- | --- | --- |
+| `test_data/engcase_bearing_vibration_4096.npy` | 1D bearing vibration diagnosis | Line chart |
+| `test_data/engcase_bridge_sensor_table_2400x6.npy` | 2D bridge structural health table | Multi-line chart or correlation heatmap |
+| `test_data/engcase_fem_stress_plate_512x512.npy` | 2D finite-element stress cloud | Heatmap |
+| `test_data/engcase_industrial_ct_volume_96x128x96.npy` | 3D industrial CT inspection | Slice heatmap or projection |
+| `test_data/engcase_cfd_wake_24x64x48x4.npy` | 4D transient CFD wake channels | Channel slice heatmap |
+| `test_data/engcase_mixed_suite.npz` | Mixed NPZ engineering suite | Switch each key |
+
+`test_data/engcase_manifest.json` describes shapes, semantics, recommended
+plots, and expected visible features. Regenerate or verify the suite with:
+
+```bash
+python test_data/create_engineering_test_data.py
+python test_data/verify_engineering_test_data.py
+```
+
+Detailed click-by-click manual validation is in `docs/TESTING_GUIDE.md`.
+
+Arbitrary large `.npy/.npz/.zarr` data is intentionally not tracked in git. Put
+very large local samples under `local_data/` or attach them as GitHub Release
+assets instead of committing them.
 
 ## License
 

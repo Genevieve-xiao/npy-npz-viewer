@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import importlib
+import os
 import runpy
 
 import numpy as np
 import pytest
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from npy_npz_viewer.config import ViewerConfig
 from npy_npz_viewer.core.array_compute import ArrayComputeService
@@ -110,3 +113,118 @@ def test_app_entrypoints_are_importable():
     assert hasattr(module, "main")
     namespace = runpy.run_path("main.py")
     assert "main" in namespace
+
+
+def test_semantic_auto_mode_shows_and_applies_inference():
+    from PySide6.QtWidgets import QApplication
+
+    from npy_npz_viewer.core.data_semantics import DataSemantics
+    from npy_npz_viewer.ui.semantic_control import SemanticControlWidget
+
+    app = QApplication.instance() or QApplication([])
+    widget = SemanticControlWidget()
+    widget.set_array_info(
+        (128, 128),
+        {
+            "semantic": DataSemantics.IMAGE_2D,
+            "confidence": "high",
+            "reason": "128 x 128 图像/矩阵",
+            "suggestions": [DataSemantics.TABULAR_2D],
+        },
+    )
+
+    assert widget.semantic_combo.currentText() == "自动判断"
+    assert widget.current_semantic == DataSemantics.IMAGE_2D
+    assert "自动判断结果" in widget.semantic_info_label.text()
+    assert DataSemantics.IMAGE_2D.value in widget.semantic_info_label.text()
+    assert widget.plot_type_combo.count() > 0
+
+
+def test_correlation_params_collect_selected_y_columns():
+    from PySide6.QtWidgets import QApplication
+
+    from npy_npz_viewer.core.data_semantics import DataSemantics
+    from npy_npz_viewer.ui.semantic_control import SemanticControlWidget
+
+    app = QApplication.instance() or QApplication([])
+    widget = SemanticControlWidget()
+    widget.set_array_info(
+        (20, 6),
+        {
+            "semantic": DataSemantics.TABULAR_2D,
+            "confidence": "high",
+            "reason": "2D table",
+            "suggestions": [],
+        },
+    )
+
+    for col in [1, 2, 3, 4, 5]:
+        widget.y_cols_list.item(col).setSelected(True)
+
+    params = widget.get_tabular_params("相关性热力图")
+
+    assert params["y_cols"] == [1, 2, 3, 4, 5]
+
+
+def test_tabular_correlation_respects_selected_y_columns(monkeypatch):
+    from PySide6.QtWidgets import QApplication
+
+    from npy_npz_viewer.app import MainWindow
+
+    app = QApplication.instance() or QApplication([])
+    captured = {}
+
+    def fake_plot(array, figure, column_labels=None, max_cols=200):
+        captured["array"] = array
+        captured["labels"] = column_labels
+        return {"success": True}
+
+    monkeypatch.setattr(
+        "npy_npz_viewer.app.SemanticVisualizer.plot_tabular_correlation",
+        fake_plot,
+    )
+
+    window = MainWindow()
+    try:
+        source = np.arange(60, dtype=np.float32).reshape(10, 6)
+        window.current_array = source
+
+        result = window.plot_tabular("相关性热力图", {"y_cols": [1, 2, 3, 4, 5]})
+
+        assert result["success"]
+        np.testing.assert_array_equal(captured["array"], source[:, [1, 2, 3, 4, 5]])
+        assert captured["labels"] == ["列 1", "列 2", "列 3", "列 4", "列 5"]
+    finally:
+        window.close()
+
+
+def test_voxel_plot_uses_bounded_deterministic_sampling():
+    from matplotlib.figure import Figure
+
+    from npy_npz_viewer.core.visualization_3d import Visualizer3D
+
+    z, y, x = np.mgrid[0:20, 0:24, 0:22]
+    array = (x + 2 * y + 3 * z).astype(np.float32)
+
+    first = Visualizer3D.plot_3d_voxel(
+        array,
+        Figure(),
+        max_axis_samples=10,
+        max_voxels=25,
+        percentile_threshold=50.0,
+    )
+    second = Visualizer3D.plot_3d_voxel(
+        array,
+        Figure(),
+        max_axis_samples=10,
+        max_voxels=25,
+        percentile_threshold=50.0,
+    )
+
+    assert first["success"]
+    assert first["displayed_voxels"] <= 25
+    assert first["candidate_voxels"] >= first["displayed_voxels"]
+    assert first["info"]
+    assert first["sampled_shape"] == second["sampled_shape"]
+    assert first["displayed_voxels"] == second["displayed_voxels"]
+    assert first["threshold"] == second["threshold"]
