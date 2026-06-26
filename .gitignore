@@ -27,4 +27,7 @@ test_data/*.npz
 !test_data/engcase_suite.zarr/
 !test_data/engcase_suite.zarr/**
 
-docs/EXPERIMENT_REPORT_DRAFT.md
+# reports
+docs/EXPERIMENT_REPORT.md
+docs/EXPERIMENT_REPORT.pdf
+.mume/*
