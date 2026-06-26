@@ -23,6 +23,8 @@ test_data/generated/
 test_data/*.npy
 test_data/*.npz
 !test_data/engcase_*.npy
-!test_data/engcase_mixed_suite.npz
+!test_data/engcase_suite.npz
+!test_data/engcase_suite.zarr/
+!test_data/engcase_suite.zarr/**
 
 docs/EXPERIMENT_REPORT_DRAFT.md

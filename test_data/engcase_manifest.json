@@ -1,13 +1,19 @@
 {
   "suite": "engcase",
-  "version": 1,
-  "description": "Deterministic engineering application data for NPY/NPZ Viewer demos.",
-  "naming_rule": "engcase_<scenario>_<shape>.npy or engcase_mixed_suite.npz",
+  "version": 2,
+  "description": "Deterministic engineering application data for NPY/NPZ/Zarr Viewer demos.",
+  "naming_rule": "Five canonical engcase_*.npy files plus engcase_suite.npz and engcase_suite.zarr suites.",
   "randomness": "No np.random calls; arrays are generated from analytic functions.",
+  "canonical_format": "npy",
+  "equivalent_formats": [
+    "engcase_suite.npz",
+    "engcase_suite.zarr"
+  ],
   "files": [
     {
       "file": "engcase_bearing_vibration_4096.npy",
       "kind": "npy",
+      "key": "bearing_vibration",
       "shape": [
         4096
       ],
@@ -32,6 +38,7 @@
     {
       "file": "engcase_bridge_sensor_table_2400x6.npy",
       "kind": "npy",
+      "key": "bridge_sensor_table",
       "shape": [
         2400,
         6
@@ -58,6 +65,7 @@
     {
       "file": "engcase_fem_stress_plate_512x512.npy",
       "kind": "npy",
+      "key": "fem_stress_plate",
       "shape": [
         512,
         512
@@ -83,6 +91,7 @@
     {
       "file": "engcase_industrial_ct_volume_96x128x96.npy",
       "kind": "npy",
+      "key": "industrial_ct_volume",
       "shape": [
         96,
         128,
@@ -112,6 +121,7 @@
     {
       "file": "engcase_cfd_wake_24x64x48x4.npy",
       "kind": "npy",
+      "key": "cfd_wake",
       "shape": [
         24,
         64,
@@ -138,22 +148,93 @@
       "size_bytes": 1179776
     },
     {
-      "file": "engcase_mixed_suite.npz",
+      "file": "engcase_suite.npz",
       "kind": "npz",
-      "dtype": "mixed float32 arrays",
-      "semantic": "Mixed engineering suite for NPZ key switching",
+      "dtype": "float32 arrays",
+      "semantic": "Canonical engineering suite for NPZ key switching",
       "recommended_plots": [
         "all supported plot groups by key"
       ],
       "recommended_operations": [
-        "Switch every key and confirm semantic controls refresh."
+        "Switch every key and compare with the matching NPY file."
       ],
       "expected_visible_features": [
-        "key-specific engineering scenario, shape, and dimensionality changes"
+        "same data as canonical NPY files, grouped by engineering scenario"
       ],
       "keys": {
         "bearing_vibration": [
           4096
+        ],
+        "bridge_sensor_table": [
+          2400,
+          6
+        ],
+        "fem_stress_plate": [
+          512,
+          512
+        ],
+        "industrial_ct_volume": [
+          96,
+          128,
+          96
+        ],
+        "cfd_wake": [
+          24,
+          64,
+          48,
+          4
+        ]
+      },
+      "source_files": {
+        "bearing_vibration": "engcase_bearing_vibration_4096.npy",
+        "bridge_sensor_table": "engcase_bridge_sensor_table_2400x6.npy",
+        "fem_stress_plate": "engcase_fem_stress_plate_512x512.npy",
+        "industrial_ct_volume": "engcase_industrial_ct_volume_96x128x96.npy",
+        "cfd_wake": "engcase_cfd_wake_24x64x48x4.npy"
+      },
+      "size_bytes": 2562845
+    },
+    {
+      "file": "engcase_suite.zarr",
+      "kind": "zarr",
+      "dtype": "float32 arrays",
+      "semantic": "Canonical engineering suite for Zarr group key switching",
+      "recommended_plots": [
+        "all supported plot groups by key"
+      ],
+      "recommended_operations": [
+        "Open with the Zarr directory button and compare each key with NPY/NPZ."
+      ],
+      "expected_visible_features": [
+        "same data as canonical NPY files, stored as chunked Zarr arrays"
+      ],
+      "keys": {
+        "bearing_vibration": [
+          4096
+        ],
+        "bridge_sensor_table": [
+          2400,
+          6
+        ],
+        "fem_stress_plate": [
+          512,
+          512
+        ],
+        "industrial_ct_volume": [
+          96,
+          128,
+          96
+        ],
+        "cfd_wake": [
+          24,
+          64,
+          48,
+          4
+        ]
+      },
+      "chunks": {
+        "bearing_vibration": [
+          1024
         ],
         "bridge_sensor_table": [
           600,
@@ -164,18 +245,24 @@
           128
         ],
         "industrial_ct_volume": [
-          48,
-          64,
-          48
+          16,
+          32,
+          32
         ],
         "cfd_wake": [
-          8,
+          4,
           32,
           24,
           4
         ]
       },
-      "size_bytes": 320249
+      "source_files": {
+        "bearing_vibration": "engcase_bearing_vibration_4096.npy",
+        "bridge_sensor_table": "engcase_bridge_sensor_table_2400x6.npy",
+        "fem_stress_plate": "engcase_fem_stress_plate_512x512.npy",
+        "industrial_ct_volume": "engcase_industrial_ct_volume_96x128x96.npy",
+        "cfd_wake": "engcase_cfd_wake_24x64x48x4.npy"
+      }
     }
   ]
 }

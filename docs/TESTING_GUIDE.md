@@ -21,7 +21,8 @@ test_data/
 | `engcase_fem_stress_plate_512x512.npy` | 2D 图像 / 2D image | `(512, 512)` | 有限元板件应力云图 / FEM stress field | 热力图 / Heatmap |
 | `engcase_industrial_ct_volume_96x128x96.npy` | 3D | `(96, 128, 96)` | 工业 CT 缺陷检测 / Industrial CT inspection | 切片热力图、投影图、3D体素图 / Slice, projection, voxel |
 | `engcase_cfd_wake_24x64x48x4.npy` | 4D | `(24, 64, 48, 4)` | CFD 尾流场 / CFD wake field | 通道切片热力图 / Channel slice heatmap |
-| `engcase_mixed_suite.npz` | NPZ 多数组 / Multi-array NPZ | 多 key / Multiple keys | 混合工程场景 / Mixed engineering suite | 切换每个 key / Switch each key |
+| `engcase_suite.npz` | NPZ 多数组 / Multi-array NPZ | 多 key，完整数据 / Multiple keys, full data | 与 NPY 基准一致 / Equivalent to canonical NPY files | 切换每个 key / Switch each key |
+| `engcase_suite.zarr/` | Zarr group | 多 key，分块存储 / Multiple keys, chunked storage | 与 NPY 基准一致 / Equivalent to canonical NPY files | 打开 Zarr 目录并切换 key / Open Zarr directory and switch keys |
 
 `engcase_manifest.json` 记录了每个数据集的说明、shape、推荐图表和预期可见特征。
 
@@ -34,8 +35,8 @@ test_data/
 The data is tracked in the repository. If files are missing or you want to regenerate the deterministic suite, run from the repository root:
 
 ```powershell
-python test_data\create_engineering_test_data.py
-python test_data\verify_engineering_test_data.py
+python test_data\manage_test_data.py generate
+python test_data\manage_test_data.py verify-all
 ```
 
 验证成功时最后会看到：
@@ -43,7 +44,8 @@ python test_data\verify_engineering_test_data.py
 A successful validation ends with:
 
 ```text
-All engcase engineering data checks passed.
+All engcase NPY/NPZ/Zarr data checks passed.
+All core checks passed.
 ```
 
 发布或提交前建议运行：
@@ -53,8 +55,8 @@ Before publishing or committing, run:
 ```powershell
 python -m compileall -q main.py src test_data tests scripts
 pytest
-python test_data\verify_functions.py
-python test_data\verify_engineering_test_data.py
+python test_data\manage_test_data.py generate
+python test_data\manage_test_data.py verify-all
 ```
 
 ## 启动软件 / Launch The Application
@@ -75,12 +77,14 @@ After installing the project, you can also run:
 npy-npz-viewer
 ```
 
-打开数据有两种方式：
+打开数据有三种方式：
 
-There are two ways to open data:
+There are three ways to open data:
 
 - 点击左侧 `打开文件`，选择 `test_data` 下的 `.npy` 或 `.npz` 文件。
 - Click `打开文件` on the left panel and choose a `.npy` or `.npz` file under `test_data`.
+- 点击左侧 `打开 Zarr 目录`，选择 `test_data/engcase_suite.zarr`。
+- Click `打开 Zarr 目录` and choose `test_data/engcase_suite.zarr`.
 - 直接把文件拖进窗口。
 - Drag the file directly into the window.
 
@@ -365,7 +369,7 @@ Expected result:
 Open:
 
 ```text
-test_data/engcase_mixed_suite.npz
+test_data/engcase_suite.npz
 ```
 
 操作：
@@ -390,13 +394,45 @@ Expected result:
 - 图表参数区会刷新为当前 key 对应的数据类型。
 - The plot parameter panel refreshes for the current key's data type.
 
+### Zarr group key 切换 / Zarr Group Key Switching
+
+打开：
+
+Open:
+
+```text
+test_data/engcase_suite.zarr
+```
+
+步骤：
+
+Steps:
+
+1. 点击左侧 `打开 Zarr 目录`，选择 `engcase_suite.zarr` 目录。
+2. Click `打开 Zarr 目录` and choose the `engcase_suite.zarr` directory.
+3. 在 key 列表中依次切换 `bearing_vibration`、`bridge_sensor_table`、`fem_stress_plate`、`industrial_ct_volume`、`cfd_wake`。
+4. Switch through `bearing_vibration`, `bridge_sensor_table`, `fem_stress_plate`, `industrial_ct_volume`, and `cfd_wake`.
+5. 对同一个 key，与 `.npy` 和 `.npz` 打开结果对比预览、统计和图表。
+6. For the same key, compare preview, statistics, and plots with the `.npy` and `.npz` versions.
+
+预期结果：
+
+Expected result:
+
+- Zarr key 的 shape 与对应 NPY 文件完全一致。
+- Each Zarr key has the same shape as the matching NPY file.
+- 预览、统计和图表结果与 NPY/NPZ 版本一致。
+- Preview, statistics, and plots match the NPY/NPZ versions.
+- Zarr 数组显示为分块/lazy 路径，适合验证大数组加载能力。
+- Zarr arrays use the chunked/lazy path, which is useful for large-array loading checks.
+
 ## 验收重点 / Acceptance Focus
 
 - `engcase_bridge_sensor_table_2400x6.npy` 的相关性热力图必须遵循 `Y 轴列（可多选）`。
 - The correlation heatmap for `engcase_bridge_sensor_table_2400x6.npy` must respect `Y 轴列（可多选）`.
 - `engcase_industrial_ct_volume_96x128x96.npy` 的 `3D体素图` 必须有默认性能保护。
 - The `3D体素图` for `engcase_industrial_ct_volume_96x128x96.npy` must use default performance protection.
-- `engcase_mixed_suite.npz` 必须能正常切换 key。
-- `engcase_mixed_suite.npz` must support normal key switching.
+- `engcase_suite.npz` 和 `engcase_suite.zarr/` 必须能正常切换 key。
+- `engcase_suite.npz` and `engcase_suite.zarr/` must support normal key switching.
 - 所有图表生成后，窗口仍可继续操作、切换参数和打开其他文件。
 - After any plot is generated, the window should remain usable for parameter changes and opening other files.

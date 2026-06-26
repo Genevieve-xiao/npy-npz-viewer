@@ -88,9 +88,8 @@ npy-npz-Viewer/
 ```bash
 python -m compileall -q main.py src test_data tests scripts
 pytest
-python test_data/verify_functions.py
-python test_data/create_engineering_test_data.py
-python test_data/verify_engineering_test_data.py
+python test_data/manage_test_data.py generate
+python test_data/manage_test_data.py verify-all
 ```
 
 手动测试步骤见：
@@ -126,7 +125,8 @@ The repository tracks a compact `engcase_` engineering test suite for demos, val
 | `test_data/engcase_fem_stress_plate_512x512.npy` | 2D 有限元应力云图 / 2D finite-element stress field | 热力图 / Heatmap |
 | `test_data/engcase_industrial_ct_volume_96x128x96.npy` | 3D 工业 CT 缺陷检测 / 3D industrial CT inspection | 切片热力图或投影图 / Slice heatmap or projection |
 | `test_data/engcase_cfd_wake_24x64x48x4.npy` | 4D CFD 尾流场 / 4D CFD wake field | 通道切片热力图 / Channel slice heatmap |
-| `test_data/engcase_mixed_suite.npz` | 混合工程 NPZ 套件 / Mixed engineering NPZ suite | 切换 key / Switch each key |
+| `test_data/engcase_suite.npz` | 与 5 个 NPY 基准数据完全一致的 NPZ 套件 / NPZ suite equivalent to the five canonical NPY files | 切换 key / Switch each key |
+| `test_data/engcase_suite.zarr/` | 与 5 个 NPY 基准数据完全一致的 Zarr group / Zarr group equivalent to the five canonical NPY files | 打开 Zarr 目录并切换 key / Open Zarr directory and switch keys |
 
 `test_data/engcase_manifest.json` 记录 shape、语义、推荐图表和预期可见特征。
 
@@ -137,8 +137,8 @@ The repository tracks a compact `engcase_` engineering test suite for demos, val
 Regenerate or verify the test data:
 
 ```bash
-python test_data/create_engineering_test_data.py
-python test_data/verify_engineering_test_data.py
+python test_data/manage_test_data.py generate
+python test_data/manage_test_data.py verify-all
 ```
 
 任意大型 `.npy/.npz/.zarr` 数据不应直接提交到 Git。建议放入 `local_data/`，或作为 GitHub Release 资产发布。
